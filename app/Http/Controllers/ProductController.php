@@ -161,7 +161,7 @@ class ProductController extends Controller
             'id_user' => 'required'
         ]);
 
-        $products = Product::where('id_user', $request->input('id_user'))->get();
+        $products = Product::get();
         if($products->isEmpty()){
             return response([
                 'message' => "There are no product",

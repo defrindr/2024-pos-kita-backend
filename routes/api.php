@@ -46,6 +46,7 @@ use App\Http\Controllers\Dashboard\PaymentTypeController as DashboardPaymentType
 use App\Http\Controllers\Dashboard\TransactionController as DashboardTransactionController;
 use App\Http\Controllers\Dashboard\NewsCategoryController as DashboardNewsCategoryController;
 use App\Http\Controllers\Bsi\UMKMInfrastructuresController as BsiUMKMInfrastructuresController;
+use App\Http\Controllers\CashierController;
 use App\Http\Controllers\Dashboard\ExpenseSearchController as DashboardExpenseSearchController;
 
 // LMS
@@ -63,6 +64,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 //RegisterAll
 Route::post("register-all", [UserController::class, 'register']);
+Route::post("register-android", [UserController::class, 'registerAndroid']);
 //RegisterWithAuth
 Route::get("register-admin", [UserController::class, 'register']);
 Route::post("register-admin", [UserController::class, 'register'])->middleware('adminMiddleware'); //Auth
@@ -111,6 +113,8 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::patch("reports/income/{id}", [IncomeController::class, 'edit']);
     Route::delete("reports/income/{id}", [IncomeController::class, 'delete']);
     Route::post("reports/incomes/filter", [IncomeController::class, 'filter']);
+
+    Route::resource("cashier", CashierController::class)->except('create', 'edit');
 });
 
 //LMS API

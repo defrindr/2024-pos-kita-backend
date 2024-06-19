@@ -26,7 +26,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api')->except(['register', 'login', 'forgotPassword', 'resetPassword', 'forgotPasswordVerifyToken']);
+        $this->middleware('auth:api')->except(['register', 'login', 'forgotPassword', 'registerAndroid', 'resetPassword', 'forgotPasswordVerifyToken']);
     }
 
     function register(Request $req)
@@ -67,6 +67,63 @@ class UserController extends Controller
         $user->address = $req->input('address');
         $user->phone_number = $req->input('phone_number');
         $user->umkm_image = $req->input('umkm_image');
+
+        $result = $user->save();
+
+        $token = JWTAuth::fromUser($user);
+
+        if ($result) {
+            return response()->json([
+                'message' => 'Register successful',
+                'data' => $user,
+                'jwt token' => $token
+            ], 201);
+        } else {
+            return response()->json([
+                'message' => 'Failed to register account',
+                'data' => null
+            ], 400);
+        }
+    }
+
+    public function registerAndroid(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            // 'id_role' => 'required',
+            // 'id_province' => 'required',
+            // 'id_city' => 'required',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:5',
+            'owner_name' => 'required',
+            'umkm_name' => 'required',
+            // 'umkm_description' => 'required',
+            // 'instagram' => 'required',
+            // 'whatsapp' => 'required',
+            // 'facebook' => 'required',
+            // 'address' => 'required',
+            // 'phone_number' => 'required',
+            // 'umkm_image' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $user = new User();
+        $user->id_role = 1; //$req->input('id_role');
+        $user->id_province = 1; //$req->input('id_province');
+        $user->id_city = 1; //$req->input('id_city');
+        $user->email = $req->input('email');
+        $user->password = Hash::make($req->input('password'));
+        $user->owner_name = $req->input('owner_name');
+        $user->umkm_name = $req->input('umkm_name');
+        $user->umkm_description = ""; //$req->input('umkm_description');
+        $user->instagram = ""; //$req->input('instagram');
+        $user->whatsapp = ""; //$req->input('whatsapp');
+        $user->facebook = ""; //$req->input('facebook');
+        $user->address = ""; //$req->input('address');
+        $user->phone_number = ""; //$req->input('phone_number');
+        $user->umkm_image = ""; //$req->input('umkm_image');
 
         $result = $user->save();
 
