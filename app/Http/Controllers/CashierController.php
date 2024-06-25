@@ -99,7 +99,10 @@ class CashierController extends Controller
 
   public function index(Request $req)
   {
-    $builder = User::where('id_role', 2)->orderBy('owner_name', 'asc');
+    $user = auth()->user();
+    $builder = User::where('id_role', 2)
+      ->where('current_team_id', $user->id)
+      ->orderBy('owner_name', 'asc');
 
     if ($req->has('keyword')) {
       $keyword = $req->get('keyword');
@@ -148,6 +151,7 @@ class CashierController extends Controller
       "id_province" => $creator->id_province,
       "id_province" => $creator->id_province,
       "id_city" => $creator->id_city,
+      "current_team_id" => $creator->id,
       // "email" => $creator->email,
       // "password" => $creator->password,
       // "owner_name" => $creator->owner_name,

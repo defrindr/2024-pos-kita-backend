@@ -15,10 +15,11 @@ use Illuminate\Support\Facades\Response;
 
 class ProductController extends Controller
 {
-    public function add(Request $request){
+    public function add(Request $request)
+    {
         $user = auth()->guard('api')->user();
 
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4096', //max 4mb
             'file2' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4096', //max 4mb
             'file3' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4096', //max 4mb
@@ -38,7 +39,7 @@ class ProductController extends Controller
             'height' => 'nullable | numeric',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
 
@@ -53,65 +54,65 @@ class ProductController extends Controller
         $product->description = $request->input('description');
         $product->price = $request->input('price');
         $product->stock = $request->input('stock');
-        $product->sku = str_replace(' ', '', Str::upper(substr(str_shuffle($characters), 0, 3))).str_replace(' ', '', Str::upper(substr(str_shuffle($numeric), 0, 2)));
+        $product->sku = str_replace(' ', '', Str::upper(substr(str_shuffle($characters), 0, 3))) . str_replace(' ', '', Str::upper(substr(str_shuffle($numeric), 0, 2)));
 
-        if(!empty($request->input('cost'))){
+        if (!empty($request->input('cost'))) {
             $product->cost = $request->input('cost');
         }
 
-        if(!empty($request->input('status'))){
+        if (!empty($request->input('status'))) {
             $product->status = $request->input('status');
         }
 
-        if(!empty($request->input('variant'))){
+        if (!empty($request->input('variant'))) {
             $product->variant = $request->input('variant');
         }
-        if(!empty($request->input('weight'))){
+        if (!empty($request->input('weight'))) {
             $product->weight = $request->input('weight');
         }
-        if(!empty($request->input('length'))){
+        if (!empty($request->input('length'))) {
             $product->length = $request->input('length');
         }
-        if(!empty($request->input('width'))){
+        if (!empty($request->input('width'))) {
             $product->width = $request->input('width');
         }
-        if(!empty($request->input('height'))){
+        if (!empty($request->input('height'))) {
             $product->height = $request->input('height');
         }
 
-        if(!empty($request->file('file'))){
+        if (!empty($request->file('file'))) {
             $file = $request->file('file');
-            $imageName = "public/images/product/".str_replace(' ', '', $file->getClientOriginalName());
+            $imageName = "public/images/product/" . str_replace(' ', '', $file->getClientOriginalName());
             $file->move(public_path('images/product'), $imageName);
             $product->image = $imageName;
         }
-        if(!empty($request->file('file2'))){
+        if (!empty($request->file('file2'))) {
             $file = $request->file('file2');
-            $imageName = "public/images/product/".str_replace(' ', '', $file->getClientOriginalName());
+            $imageName = "public/images/product/" . str_replace(' ', '', $file->getClientOriginalName());
             $file->move(public_path('images/product'), $imageName);
             $product->image_2 = $imageName;
         }
-        if(!empty($request->file('file3'))){
+        if (!empty($request->file('file3'))) {
             $file = $request->file('file3');
-            $imageName = "public/images/product/".str_replace(' ', '', $file->getClientOriginalName());
+            $imageName = "public/images/product/" . str_replace(' ', '', $file->getClientOriginalName());
             $file->move(public_path('images/product'), $imageName);
             $product->image_3 = $imageName;
         }
-        if(!empty($request->file('file4'))){
+        if (!empty($request->file('file4'))) {
             $file = $request->file('file4');
-            $imageName = "public/images/product/".str_replace(' ', '', $file->getClientOriginalName());
+            $imageName = "public/images/product/" . str_replace(' ', '', $file->getClientOriginalName());
             $file->move(public_path('images/product'), $imageName);
             $product->image_4 = $imageName;
         }
-        if(!empty($request->file('file5'))){
+        if (!empty($request->file('file5'))) {
             $file = $request->file('file5');
-            $imageName = "public/images/product/".str_replace(' ', '', $file->getClientOriginalName());
+            $imageName = "public/images/product/" . str_replace(' ', '', $file->getClientOriginalName());
             $file->move(public_path('images/product'), $imageName);
             $product->image_5 = $imageName;
         }
         // Image
 
-        if(!$product->save()){
+        if (!$product->save()) {
             return response([
                 'message' => "Failed to add product",
                 'data' => null
@@ -126,11 +127,12 @@ class ProductController extends Controller
         ], 201);
     }
 
-    public function show(Request $request){
+    public function show(Request $request)
+    {
         $user = auth()->guard('api')->user();
 
         $product = Product::all()->find($request->id);
-        if($product==null){
+        if ($product == null) {
             return response([
                 'message' => "There is no product with that id",
                 'data' => null
@@ -143,7 +145,7 @@ class ProductController extends Controller
 
         $result = $product;
 
-        if($result){
+        if ($result) {
             return response([
                 'message' => "success",
                 'data' => $product,
@@ -154,21 +156,22 @@ class ProductController extends Controller
         }
     }
 
-    public function showAll(Request $request){
+    public function showAll(Request $request)
+    {
         $user = auth()->guard('api')->user();
+        $userId = $user->id;
 
-        $validator = Validator::make($request->all(),[
-            'id_user' => 'required'
-        ]);
+        if ($user->id_role === 2) {
+            $userId = $user->current_team_id;
+        }
 
-        $products = Product::get();
-        if($products->isEmpty()){
+        $products = Product::where(['id_user' => $userId])->get();
+        if ($products->isEmpty()) {
             return response([
                 'message' => "There are no product",
                 'data' => null
             ], 400);
-        }
-        else{
+        } else {
             return response([
                 'message' => "success",
                 'data' => $products
@@ -176,9 +179,10 @@ class ProductController extends Controller
         }
     }
 
-    public function edit(Request $request){
+    public function edit(Request $request)
+    {
         $user = auth()->guard('api')->user();
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4096', //max 4mb
             'file2' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4096', //max 4mb
             'file3' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4096', //max 4mb
@@ -197,117 +201,115 @@ class ProductController extends Controller
             'height' => 'nullable | numeric',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
 
         $product = Product::all()->find($request->id);
-        if($product==null){
+        if ($product == null) {
             return response([
                 'message' => "There is no product with that id",
                 'data' => null
             ], 400);
         }
 
-        if(!empty($request->input('name'))){
+        if (!empty($request->input('name'))) {
             $product->name = $request->input('name');
         }
 
-        if(!empty($request->input('description'))){
+        if (!empty($request->input('description'))) {
             $product->description = $request->input('description');
         }
 
-        if(!empty($request->input('price'))){
+        if (!empty($request->input('price'))) {
             $product->price = $request->input('price');
         }
 
-        if(!empty($request->input('stock'))){
+        if (!empty($request->input('stock'))) {
             $product->stock = $request->input('stock');
         }
 
-        if(!empty($request->input('cost'))){
+        if (!empty($request->input('cost'))) {
             $product->cost = $request->input('cost');
         }
 
-        if(!empty($request->input('status'))){
+        if (!empty($request->input('status'))) {
             $product->status = $request->input('status');
         }
 
-        if(!empty($request->input('variant'))){
+        if (!empty($request->input('variant'))) {
             $product->variant = $request->input('variant');
         }
-        if(!empty($request->input('weight'))){
+        if (!empty($request->input('weight'))) {
             $product->weight = $request->input('weight');
         }
-        if(!empty($request->input('length'))){
+        if (!empty($request->input('length'))) {
             $product->length = $request->input('length');
         }
-        if(!empty($request->input('width'))){
+        if (!empty($request->input('width'))) {
             $product->width = $request->input('width');
         }
-        if(!empty($request->input('height'))){
+        if (!empty($request->input('height'))) {
             $product->height = $request->input('height');
         }
 
-        if(!empty($request->file('file'))){
+        if (!empty($request->file('file'))) {
             $file = $request->file('file');
-            $imageName = "public/images/product/".str_replace(' ', '', $file->getClientOriginalName());
+            $imageName = "public/images/product/" . str_replace(' ', '', $file->getClientOriginalName());
             $file->move(public_path('images/product'), $imageName);
             $product->image = $imageName;
         }
-        if(!empty($request->file('file2'))){
+        if (!empty($request->file('file2'))) {
             $file = $request->file('file2');
-            $imageName = "public/images/product/".str_replace(' ', '', $file->getClientOriginalName());
+            $imageName = "public/images/product/" . str_replace(' ', '', $file->getClientOriginalName());
             $file->move(public_path('images/product'), $imageName);
             $product->image_2 = $imageName;
         }
-        if(!empty($request->file('file3'))){
+        if (!empty($request->file('file3'))) {
             $file = $request->file('file3');
-            $imageName = "public/images/product/".str_replace(' ', '', $file->getClientOriginalName());
+            $imageName = "public/images/product/" . str_replace(' ', '', $file->getClientOriginalName());
             $file->move(public_path('images/product'), $imageName);
             $product->image_3 = $imageName;
         }
-        if(!empty($request->file('file4'))){
+        if (!empty($request->file('file4'))) {
             $file = $request->file('file4');
-            $imageName = "public/images/product/".str_replace(' ', '', $file->getClientOriginalName());
+            $imageName = "public/images/product/" . str_replace(' ', '', $file->getClientOriginalName());
             $file->move(public_path('images/product'), $imageName);
             $product->image_4 = $imageName;
         }
-        if(!empty($request->file('file5'))){
+        if (!empty($request->file('file5'))) {
             $file = $request->file('file5');
-            $imageName = "public/images/product/".str_replace(' ', '', $file->getClientOriginalName());
+            $imageName = "public/images/product/" . str_replace(' ', '', $file->getClientOriginalName());
             $file->move(public_path('images/product'), $imageName);
             $product->image_5 = $imageName;
         }
 
         $result = $product->save();
-        if($result){
+        if ($result) {
             return response([
                 'message' => "Product edited",
                 'data' => $product
             ], 200);
-        }
-        else{
+        } else {
             return response([
                 'message' => "Failed to edit product",
                 'data' => null
             ], 400);
         }
-
     }
 
-    public function delete(Request $request){
+    public function delete(Request $request)
+    {
         $user = auth()->guard('api')->user();
         $product = Product::find($request->id);
         $result = Product::destroy($request->id);
 
-        if($result){
+        if ($result) {
             return response([
                 'message' => "Product deleted",
                 'data' => $product
             ], 200);
-        }
-        else{
+        } else {
             return response([
                 'message' => "Failed to delete product",
                 'data' => null
@@ -315,27 +317,27 @@ class ProductController extends Controller
         }
     }
 
-    public function search(Request $request){
+    public function search(Request $request)
+    {
         $user = auth()->guard('api')->user();
 
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'query' => 'required'
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response([
                 'message' => "enter a keyword"
             ], 400);
         }
 
-        $products = Product::where('name', 'like', '%'.$request->input('query').'%')->orWhere('description', 'like', '%'.$request->input('query').'%')->get();
-        if($products->isEmpty()){
+        $products = Product::where('name', 'like', '%' . $request->input('query') . '%')->orWhere('description', 'like', '%' . $request->input('query') . '%')->get();
+        if ($products->isEmpty()) {
             return response([
                 'message' => "product not found",
                 'data' => null
             ], 400);
-        }
-        else{
+        } else {
             return response([
                 'message' => "success",
                 'data' => $products
@@ -343,14 +345,15 @@ class ProductController extends Controller
         }
     }
 
-    public function details(Request $request){
+    public function details(Request $request)
+    {
         $user = auth()->guard('api')->user();
 
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'query' => 'required'
         ]);
 
-        $product = Product::where('name',$request->input('query'))->first();
+        $product = Product::where('name', $request->input('query'))->first();
         $umkm = User::where('id', $product->id_user)->first();
         $otherProduct = Product::where('id_user', $umkm->id)->get();
         $otherProductDetails = $otherProduct->map(function ($other) {
@@ -368,13 +371,12 @@ class ProductController extends Controller
                 'slug-product' => Str::slug($other->name),
             ];
         });
-        if($umkm==null){
+        if ($umkm == null) {
             return response([
                 'message' => "UMKM not found",
                 'data' => null
             ], 400);
-        }
-        else{
+        } else {
             return response([
                 'message' => "success",
                 'data' => [
@@ -388,7 +390,8 @@ class ProductController extends Controller
         }
     }
 
-    public function showLatestProducts(Request $request){
+    public function showLatestProducts(Request $request)
+    {
         $user = auth()->guard('api')->user();
 
         $products = Product::orderBy('created_at', 'DESC')->get();
@@ -409,7 +412,8 @@ class ProductController extends Controller
             'data' => $productDetails
         ], 200);
     }
-    public function showOldestProducts(Request $request){
+    public function showOldestProducts(Request $request)
+    {
         $user = auth()->guard('api')->user();
 
         $products = Product::orderBy('created_at', 'ASC')->get();
@@ -430,5 +434,4 @@ class ProductController extends Controller
             'data' => $productDetails
         ], 200);
     }
-
 }

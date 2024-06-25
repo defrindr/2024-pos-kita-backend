@@ -17,6 +17,38 @@ class TransactionController extends Controller
         $this->middleware('auth:api');
     }
 
+    public function sync(Request $request)
+    {
+        $user = auth()->user();
+        $ids = $request->post('exists', []);
+
+        if (gettype($ids) !== "array") {
+            $ids = [$ids];
+        }
+
+        $transactions = Transaction::where('id_user', $user->id)->get();
+        if ($transactions) {
+            foreach ($transactions as $i => $t) {
+                $transactions[$i]->items = $t->transactionItems;
+                $transactions[$i]->server_id = $t->id;
+                $transactions[$i]->sync_status = 3;
+
+                unset($transactions[$i]->transactionItems);
+                foreach ($transactions[$i]->items as $i2 => $item) {
+                    $transactions[$i]->items[$i2]->product_name = $item->product->name;
+                    $transactions[$i]->items[$i2]->id_transaction = $t->id;
+                    unset($transactions[$i]->items[$i2]->product);
+                    $transactions[$i]->items[$i2]->sync_status = 1;
+                    $transactions[$i]->items[$i2]->total_price = $transactions[$i]->items[$i2]->current_price * $transactions[$i]->items[$i2]->quantity;
+                }
+            }
+        }
+
+        return response()->json([
+            'message' => 'success',
+            'data' => $transactions
+        ]);
+    }
     public function add(Request $request)
     {
         $user = auth()->guard('api')->user();
@@ -27,8 +59,14 @@ class TransactionController extends Controller
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $numeric = '1234567890';
 
+
+        $idStore = $user->id;
+
+        if ($user->id_role == 2) $idStore = $user->current_team_id;
+
         $transaction = new Transaction();
         $transaction->id_user = $user->id;
+        $transaction->id_store = $idStore;
         $transaction->id_payment_type = NULL;
         $transaction->total = 0;
         $transaction->transaction_date = date('Y:m:d');
@@ -215,28 +253,27 @@ class TransactionController extends Controller
         }
     }
 
-    public function filter(Request $request){
+    public function filter(Request $request)
+    {
         $user = auth()->guard('api')->user();
 
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'start_date' => 'required | date',
             'end_date' => 'required | date',
         ]);
 
         $transaction = Transaction::where('id_user', $user->id)->whereBetween('transaction_date', [$request->input('start_date'), $request->input('end_date')])->get();
 
-        if($transaction->isEmpty()){
+        if ($transaction->isEmpty()) {
             return response([
                 'message' => "There are no transaction",
                 'data' => null
             ], 400);
-        }
-        else{
+        } else {
             return response([
                 'message' => "success",
                 'data' => $transaction
             ], 200);
         }
     }
-
 }

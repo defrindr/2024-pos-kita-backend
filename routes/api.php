@@ -99,6 +99,7 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get("transaction/{id}", [TransactionController::class, 'show']);
     Route::post("transactions", [TransactionController::class, 'showAll']);
     Route::post("transactions/filter", [TransactionController::class, 'filter']);
+    Route::post("transactions/sync", [TransactionController::class, 'sync']);
     //Expense
     Route::post("reports/expense", [ExpenseController::class, 'add']);
     Route::get("reports/expense/{id}", [ExpenseController::class, 'show']);
