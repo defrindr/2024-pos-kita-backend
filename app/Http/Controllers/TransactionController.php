@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\TransactionItem;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -51,14 +52,22 @@ class TransactionController extends Controller
     }
     public function add(Request $request)
     {
-        $user = auth()->guard('api')->user();
         $validator = Validator::make($request->all(), [
             'notes' => 'required',
+            'id_user' => 'required',
+            'created_at' => 'required'
         ]);
 
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $numeric = '1234567890';
 
+        // Cashier
+        $user = User::where('id', $request->id_user)->first();
+        if (!$user)
+            return response([
+                'message' => "Failed to add transaction, user empty",
+                'data' => null
+            ], 400);
 
         $idStore = $user->id;
 
@@ -69,7 +78,8 @@ class TransactionController extends Controller
         $transaction->id_store = $idStore;
         $transaction->id_payment_type = NULL;
         $transaction->total = 0;
-        $transaction->transaction_date = date('Y:m:d');
+        $transaction->transaction_date = date('Y:m:d H:i:s', strtotime($request->created_at));
+        $transaction->nama_kasir = $user->owner_name;
         $transaction->notes = $request->input('notes');
         $transaction->timestamp = date('H:i:s', time());
         $transaction->order_code = "#" . date('Y') . "-" . str_replace(' ', '', Str::upper(substr(str_shuffle($characters), 0, 3))) . "-" . str_replace(' ', '', Str::upper(substr(str_shuffle($numeric), 0, 3)));
