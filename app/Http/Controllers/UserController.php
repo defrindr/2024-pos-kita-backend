@@ -298,7 +298,7 @@ class UserController extends Controller
         $emailhelper->sendEmail($req->email, $token);
 
         return response([
-            'message' => 'A token has been sent to your email',
+            'message' => 'Token telah dikirimkan ke email',
             'data' => null
         ], 200);
     }
@@ -335,7 +335,7 @@ class UserController extends Controller
         }
 
         return response([
-            'message' => 'Token is valid',
+            'message' => 'Token yang anda masukkan benar.',
             'status' => 'valid'
         ], 200);
     }
@@ -360,7 +360,7 @@ class UserController extends Controller
 
         if (!$reset) {
             return response([
-                'message' => 'Invalid token or email does not match',
+                'message' => 'Token yang anda masukkan salah!',
                 'data' => null
             ], 400);
         }
@@ -372,7 +372,7 @@ class UserController extends Controller
         DB::table('password_reset_tokens')->where('token', $req->token)->delete();
 
         return response([
-            'message' => 'Password reset successful',
+            'message' => 'Password berhasil diubah',
             'data' => null
         ], 200);
     }
